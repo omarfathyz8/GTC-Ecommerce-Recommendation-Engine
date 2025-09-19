@@ -1,12 +1,15 @@
 import streamlit as st
 import pandas as pd
 
+st.set_page_config(page_title="E-commerce Recommendation Engine", layout="wide")
+st.title("🛒 E-commerce Recommendation Engine")
+
 # ======================
 # Load dataset
 # ======================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("amazon.csv")
+    df = pd.read_csv("amazon_cleaned.csv")
     return df
 
 df = load_data()
@@ -32,8 +35,6 @@ def recommend_by_product(product_name, n=5):
 # ======================
 # Streamlit App
 # ======================
-st.set_page_config(page_title="E-commerce Recommendation Engine", layout="wide")
-st.title("🛒 E-commerce Recommendation Engine")
 
 st.write("Welcome! Get personalized or product-based recommendations with prices, discounts, and ratings.")
 
@@ -68,23 +69,34 @@ else:
 # Display Recommendations
 # ======================
 if 'results' in locals() and results is not None:
+
     # Apply filters
-    results = results[
-        (results['rating'] >= min_rating) &
-        (results['discounted_price'] <= max_price)
-    ]
+    try:
+        results = results[
+            (pd.to_numeric(results['rating'], errors='coerce') >= min_rating) &
+            (pd.to_numeric(results['discounted_price'], errors='coerce') <= max_price)
+        ]
+    except Exception as e:
+        st.error(f"❌ Error while filtering: {e}")
+        st.stop()
+        
+        import requests
 
     if len(results) == 0:
         st.error("No products match your filters.")
     else:
         st.subheader("✨ Recommended Products")
-        cols = st.columns(3)  # show 3 products per row
-        for idx, row in results.iterrows():
-            with cols[idx % 3]:
-                st.image(row['img_link'], use_column_width=True)
-                st.markdown(f"**[{row['product_name']}]({row['product_link']})**")
-                st.write(f"💰 **Discounted:** ₹{row['discounted_price']}")
-                st.write(f"💸 Actual: ₹{row['actual_price']}")
-                st.write(f"🏷️ {row['discount_percentage']}% off")
-                st.write(f"⭐ {row['rating']} ({row['rating_count']} reviews)")
-                st.caption(row['about_product'][:100] + "..." if isinstance(row['about_product'], str) else "")
+        for i in range(0, len(results), 3):   # step 3
+            cols = st.columns(3)
+            for j, col in enumerate(cols):
+                if i + j < len(results):
+                    row = results.iloc[i + j]
+                    with col:
+                        with st.container():
+                            st.image(row['img_link'], use_container_width=True)
+                            st.markdown(f"**[{row['product_name'][:100] + "..."}]({row['product_link']})**")
+                            st.write(f"💰 **Discounted:** ₹{row['discounted_price']}")
+                            st.write(f"💸 Actual: ₹{row['actual_price']}")
+                            st.write(f"🏷️ {row['discount_percentage']}% off")
+                            st.write(f"⭐ {row['rating']} ({row['rating_count']} reviews)")
+                            st.caption(row['about_product'][:100] + "..." if isinstance(row['about_product'], str) else "")
