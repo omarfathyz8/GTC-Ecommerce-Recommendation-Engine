@@ -31,7 +31,7 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ## 🧩 Models  
 
-### 1. Collaborative Filtering (CF)  
+### 1. Collaborative Filtering (CF)  🤖 [Download Model](https://drive.google.com/file/d/1Mbv1LRy1gxP5jzH8zDCbUML7JBn3JVzn/view?usp=sharing "Text-Based Content Filtering Model")
 - Algorithm: **SVD** (after hyperparameter tuning).  
 - Best hyperparameters:  
   ```python
@@ -47,7 +47,7 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ### 2. Content-Based Filtering
 
-#### A. Text-Based Model - 🤖 [Download Model](https://drive.google.com/file/d/1Mbv1LRy1gxP5jzH8zDCbUML7JBn3JVzn/view?usp=sharing "Text-Based Content Filtering Model")
+#### A. Text-Based Model 
 - **TF-IDF Vectorization** of product descriptions and reviews
 - **Cosine Similarity** for product-to-product recommendations
 - Features: `Text`, `Summary`, combined into `text_all`
@@ -60,7 +60,7 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ---
 
-### 3. Matrix Factorization Models - 🤖 [Download Model](https://drive.google.com/file/d/1Mc_O7_L5xIiAU02LTyEVI67RafMuRHwz/view?usp=sharing "SVD Matrix Factorization Model")
+### 3. Matrix Factorization Models
 
 #### A. SVD++ (Enhanced SVD )
 - **Primary Model**: Currently deployed in the system
