@@ -71,20 +71,11 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ### 3. Matrix Factorization Models - 🤖 [Download Model](https://drive.google.com/file/d/1Mc_O7_L5xIiAU02LTyEVI67RafMuRHwz/view?usp=sharing "SVD Matrix Factorization Model")
 
-#### A. SVD (Singular Value Decomposition)
+#### A. SVD++ (Enhanced SVD )
 - **Primary Model**: Currently deployed in the system
 - Decomposes user-item interaction matrix
 - Handles sparse data effectively
 - Captures latent factors in user preferences
-
-#### B. SVD++ (Enhanced SVD - Not Currently Active)
-- **Advanced Model**: Incorporates implicit feedback
-- Accounts for user rating patterns beyond explicit scores
-- Higher computational cost but potentially better accuracy
-- Code prepared but commented out in current deployment:
-  ```python
-  # from surprise import SVDpp  # Not currently used
-  ```
 
 ---
 
