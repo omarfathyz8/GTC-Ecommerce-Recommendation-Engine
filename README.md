@@ -56,7 +56,7 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ### 2. Content-Based Filtering
 
-#### A. Text-Based Model 
+#### A. Text-Based Model - 🤖 [Download Model](https://drive.google.com/file/d/1Mbv1LRy1gxP5jzH8zDCbUML7JBn3JVzn/view?usp=sharing "Text-Based Content Filtering Model")
 - **TF-IDF Vectorization** of product descriptions and reviews
 - **Cosine Similarity** for product-to-product recommendations
 - Features: `Text`, `Summary`, combined into `text_all`
@@ -69,7 +69,13 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ---
 
-### 3. Matrix Factorization Models
+### 3. Matrix Factorization Models - 🤖 [Download Model](https://drive.google.com/file/d/1Mc_O7_L5xIiAU02LTyEVI67RafMuRHwz/view?usp=sharing "SVD Matrix Factorization Model")
+
+#### A. SVD (Singular Value Decomposition)
+- **Primary Model**: Currently deployed in the system
+- Decomposes user-item interaction matrix
+- Handles sparse data effectively
+- Captures latent factors in user preferences
 
 #### B. SVD++ (Enhanced SVD - Not Currently Active)
 - **Advanced Model**: Incorporates implicit feedback
@@ -77,6 +83,8 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 - Higher computational cost but potentially better accuracy
 - Code prepared but commented out in current deployment:
   ```python
+  # from surprise import SVDpp  # Not currently used
+  ```
 
 ---
 
@@ -88,7 +96,13 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 - Adjustable weighting parameter (α) via slider
 - Combines personalization with popularity trends
 
-#### B. Category-CF Hybrid
+#### B. Content-CF Hybrid (Not Currently Deployed)
+- **Text + Summary + CF**: Weighted combination
+- Dynamic α based on user activity levels
+- More active users → higher CF weight
+- Less active users → higher content-based weight
+
+#### C. Category-CF Hybrid
 - **Category + CF**: Currently deployed
 - Filters by category, ranks by CF predictions
 - Ensures recommendations within user's interest areas
@@ -101,6 +115,8 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 - Metrics: Average rating × Number of reviews
 - **Threshold Filtering**: Minimum rating requirements (70th percentile)
 - **Category-Specific**: Popular items within categories
+- **Time-Weighted**: Could incorporate recency (future enhancement)
+
 ---
 
 ## 🖥️ Deployment
@@ -154,7 +170,6 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 
 ---
 
-
 ## 📊 Dataset Requirements
 
 Your CSV should contain:
@@ -168,7 +183,6 @@ Your CSV should contain:
 Optional (for user-friendly names):
 - `profile_name`, `ProfileName`, `user_name`, `UserName`, `name`, `Name`
 
----
 
 ## ✨ Key Features
 
@@ -180,3 +194,8 @@ Optional (for user-friendly names):
 - **Performance Optimized**: Efficient caching and data processing
 
 ---
+
+## 📥 Model Downloads
+- 🤖 **[SVD Collaborative Filtering Model](https://drive.google.com/file/d/1Mc_O7_L5xIiAU02LTyEVI67RafMuRHwz/view?usp=sharing)** - Main recommendation engine
+- 🤖 **[Text-Based Content Model](https://drive.google.com/file/d/1Mbv1LRy1gxP5jzH8zDCbUML7JBn3JVzn/view?usp=sharing)** - Content-based filtering model
+
