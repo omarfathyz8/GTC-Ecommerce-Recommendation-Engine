@@ -1,58 +1,49 @@
 # 📦 Amazon Recommendation System
 
-This project implements a **Hybrid Recommendation System** that combines **Collaborative Filtering** with **Popularity-Based** and **Category-Aware** filtering to provide personalized Amazon product recommendations based on user ratings and product metadata.
+This project implements a **Hybrid Recommendation System** that combines **Collaborative Filtering (SVD)** with **Content-Based Filtering** (using both textual data and product categories). The goal is to improve product recommendations based on user reviews, ratings, and item metadata.  
 
 ---
 
-## 🚀 Project Workflow
+## 🚀 Project Workflow  
 
-### 1. Data Preprocessing
-- ✅ Handled missing values in user and product data.
-- ✅ Verified no duplicate user-product rating pairs.
-- ✅ Fixed data types (UserId, ProductId as strings).
-- ✅ Validated required columns: `UserId`, `ProductId`, `Score`, `product_name`, `Brand`, `main_category`.
+### 1. Data Preprocessing  
+- ✅ Handled missing values.  
+- ✅ Verified no duplicate entries.  
+- ✅ Fixed data types.  
 
-### 2. Feature Engineering
-- Ensured consistent string formatting for IDs.
-- Created aggregated product statistics:
-  - `avg_score` = Average rating per product
-  - `num_ratings` = Total ratings per product
-  - `rating_std` = Rating variance per product
-- Built user behavior profiles:
-  - User average rating patterns
-  - User activity levels (number of ratings given)
-- **Text Processing** (for content-based models):
-  - Combined `Text` + `Summary` → `text_all`
-  - Applied TF-IDF vectorization
-  - Created product similarity matrices
+### 2. Feature Engineering  
+- Extracted time-based features: `year`, `month`, `day`, `dayofweek`.  
+- Created new features:  
+  - `helpfulness_ratio = HelpfulnessNumerator / HelpfulnessDenominator`  
+  - `time_weight = 1 / (1 + (year - df["year"]))`  
+  - `final_score`, `final_score2`, `final_score3` (weighted variations of score).  
 
-### 3. Exploratory Data Analysis (EDA)
-- 📊 **Rating Distribution**: Most ratings are positive (4-5 stars)
-- 👥 **User Behavior**: Wide range of user activity levels
-- 📦 **Product Categories**: Electronics and Books dominate the dataset
-- ⭐ **Quality Products**: High-rated products tend to have more reviews
-- 🏷️ **Brand Analysis**: Popular brands show consistent rating patterns
+### 3. Exploratory Data Analysis (EDA)  
+- 📈 Reviews increased significantly over the years.  
+- ⭐ 60% of ratings are **5**, showing a strong positive skew.  
+- 👥 4 users are clear outliers with much higher review counts.  
+- 📦 One product has a significantly higher number of reviews.  
+- 📅 Ratings dip mid-week and rise on weekends.  
+- 🏆 **1999–2000** best years for ratings, **2001** worst.  
+- 📊 Post-2012: stable but fluctuating ratings trend.  
 
 ---
 
-## 🧩 Models
+## 🧩 Models  
 
-### 1. Collaborative Filtering (CF)
-- Algorithm: **SVD** (Singular Value Decomposition) from scikit-surprise
-- Model File: `score_model.pkl` (trained CF model)
-- Features used: `(UserId, ProductId, Score)`
-- Core Function:
+### 1. Collaborative Filtering (CF)  
+- Algorithm: **SVD** (after hyperparameter tuning).  
+- Best hyperparameters:  
   ```python
-  def predict_cf_for_pair(user_id, product_id):
-      return score_model.predict(str(user_id), str(product_id)).est
+  {'n_factors': 50, 'n_epochs': 80, 'lr_all': 0.02, 'reg_all': 0.08}
   ```
-- **Performance Metrics**:
-  - RMSE: Optimized through hyperparameter tuning
-  - MAE: Validated on test set
-- **Real-time Predictions**: Individual user-product rating predictions
-- **Category-Aware**: CF predictions within specific product categories
+- Features used: `(UserID, ProductID, final_score2)`  
+- Results:  
+  - RMSE = **0.9334**  
+  - MAE  = **0.8112**  
 
 ---
+
 
 ### 2. Content-Based Filtering
 
