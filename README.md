@@ -67,7 +67,6 @@ This project implements a **Hybrid Recommendation System** that combines **Colla
 - Decomposes user-item interaction matrix
 - Handles sparse data effectively
 - Captures latent factors in user preferences
-
 ---
 
 ### 4. Hybrid Models
