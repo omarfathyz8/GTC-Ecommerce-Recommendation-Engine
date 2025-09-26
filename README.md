@@ -33,6 +33,9 @@ Try the application here:
    - Display top-N recommendations in a clean interface.  
 
 ## 📊 Tech Stack
-- Python, Pandas, Numpy  
-- Scikit-learn  
-- Streamlit  
+- Python
+- Pandas
+- Numpy
+- Scikit-learn
+- Streamlit
+ 
