@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 DATA_FILE = "final_amazon_dataset.csv"
 SCORE_MODEL_FILE = "score_model.pkl"
 # PRODUCT_MODEL_FILE removed / not used for category-aware CF predictions
-
 # =====================
 # Load Data & Model
 # =====================
@@ -184,8 +183,9 @@ st.sidebar.page_link("pages/Chat_Bot.py", label="💬 Chatbot")
 st.sidebar.title("🎯 Recommendation Options")
 option = st.sidebar.selectbox(
     "Choose Recommendation Type",
-    ("Category-Based (CF)",  "Popularity", "Hybrid" ,"Dataset Overview")
+    ("Category-Based (CF)", "Rating Prediction", "Popularity", "Hybrid", "Dataset Overview")
 )
+
 # Sidebar dataset info
 with st.sidebar.expander("📊 Dataset Info"):
     st.write(f"**Total Products:** {df['ProductId'].nunique():,}")
@@ -193,13 +193,13 @@ with st.sidebar.expander("📊 Dataset Info"):
     st.write(f"**Total Ratings:** {len(df):,}")
     st.write(f"**Average Rating:** {df['Score'].mean():.2f}")
 
-col1, col2 = st.columns([2, 1])
-
 # ---------------------
-# Inputs (shared)
+# Inputs (shared for some options)
 # ---------------------
-with col1:
-    if option not in ["Dataset Overview", "Popularity"]:
+if option not in ["Dataset Overview", "Popularity", "Rating Prediction"]:
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
         st.subheader("🔍 Input Parameters")
         # user input
         profile_cols = ['profile_name','ProfileName','user_name','UserName','name','Name']
@@ -225,8 +225,7 @@ with col1:
         categories = df['main_category'].dropna().unique().tolist()
         chosen_category = st.selectbox("Or pick a category (optional)", options=[''] + categories)
 
-# resolve ids
-if option not in ["Dataset Overview","Popularity"]:
+    # resolve ids
     user_id = get_user_id_from_input(user_input) if user_input else None
     product_id = get_product_id_from_input(product_input) if product_input else None
 
@@ -273,6 +272,163 @@ if option == "Category-Based (CF)":
                 st.success(f"Top {len(recs_df)} in category '{category_to_use}' for user {user_id}:")
                 st.table(recs_df)
 
+# ---------------------
+# Rating Prediction
+# ---------------------
+elif option == "Rating Prediction":
+    st.subheader("🎯 Predict User Rating for Product")
+    st.markdown("Get a collaborative filtering prediction for how much a user would rate a specific product.")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # User input section
+        st.markdown("#### User Selection")
+        profile_cols = ['profile_name', 'ProfileName', 'user_name', 'UserName', 'name', 'Name']
+        has_profile = any(c in df.columns for c in profile_cols)
+        user_label = "Profile Name or User ID" if has_profile else "User ID"
+        
+        # Sample users for dropdown
+        sample_users = df['UserId'].unique()[:50].tolist()
+        if has_profile:
+            profile_col = next((c for c in profile_cols if c in df.columns), None)
+            sample_profile_names = df[profile_col].dropna().unique()[:20].tolist()
+            sample_users = list(sample_profile_names) + sample_users
+
+        pred_user_input = st.selectbox(f"Select {user_label}", options=[''] + sample_users, key="pred_user_select")
+        if not pred_user_input:
+            pred_user_input = st.text_input(f"Or enter {user_label} manually", 
+                                          value="", 
+                                          key="pred_user_manual",
+                                          placeholder="Enter user ID or profile name")
+
+        # Product input section
+        st.markdown("#### Product Selection")
+        sample_product_names = df['product_name'].dropna().unique()[:50].tolist()
+        pred_product_input = st.selectbox("Select Product Name", 
+                                        options=[''] + sample_product_names, 
+                                        key="pred_product_select")
+        if not pred_product_input:
+            pred_product_input = st.text_input("Or enter Product Name or ID manually", 
+                                             value="", 
+                                             key="pred_product_manual",
+                                             placeholder="Enter product name or ID")
+
+    with col2:
+        st.markdown("#### Validation")
+        # Resolve IDs
+        pred_user_id = get_user_id_from_input(pred_user_input) if pred_user_input else None
+        pred_product_id = get_product_id_from_input(pred_product_input) if pred_product_input else None
+        
+        if pred_user_id:
+            st.success(f"✅ User ID: {pred_user_id}")
+        else:
+            st.error("❌ User not found")
+            
+        if pred_product_id:
+            st.success(f"✅ Product ID: {pred_product_id}")
+        else:
+            st.error("❌ Product not found")
+        
+        # Show if user has already rated this product
+        if pred_user_id and pred_product_id:
+            existing_rating = df[(df['UserId'] == pred_user_id) & 
+                               (df['ProductId'] == pred_product_id)]
+            if not existing_rating.empty:
+                actual_rating = existing_rating['Score'].iloc[0]
+                st.info(f"📝 User's actual rating: {actual_rating}")
+            else:
+                st.info("📝 User hasn't rated this product")
+
+    # Prediction button and results
+    if st.button("🔮 Predict Rating", type="primary", key="predict_rating_btn"):
+        if not pred_user_id:
+            st.error("Please provide a valid User ID or Profile Name.")
+        elif not pred_product_id:
+            st.error("Please provide a valid Product Name or ID.")
+        else:
+            with st.spinner("Generating prediction..."):
+                predicted_rating = predict_cf_for_pair(pred_user_id, pred_product_id)
+            
+            if np.isnan(predicted_rating):
+                st.error("❌ Unable to generate prediction. This might be due to:")
+                st.write("- Insufficient data for this user-product combination")
+                st.write("- User or product not in training data")
+                st.write("- Model limitations")
+            else:
+                # Display results
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Predicted Rating", f"{predicted_rating:.2f}")
+                
+                with col2:
+                    # Show confidence level based on rating value
+                    if predicted_rating >= 4.0:
+                        confidence = "High 📈"
+                        confidence_color = "green"
+                    elif predicted_rating >= 3.0:
+                        confidence = "Medium 📊"
+                        confidence_color = "orange"
+                    else:
+                        confidence = "Low 📉"
+                        confidence_color = "red"
+                    st.metric("Confidence", confidence)
+                
+                with col3:
+                    # Rating category
+                    if predicted_rating >= 4.5:
+                        category = "Excellent ⭐⭐⭐⭐⭐"
+                    elif predicted_rating >= 4.0:
+                        category = "Very Good ⭐⭐⭐⭐"
+                    elif predicted_rating >= 3.0:
+                        category = "Good ⭐⭐⭐"
+                    elif predicted_rating >= 2.0:
+                        category = "Fair ⭐⭐"
+                    else:
+                        category = "Poor ⭐"
+                    st.metric("Rating Category", category)
+                
+                # Additional context
+                st.markdown("---")
+                st.subheader("📊 Additional Context")
+                
+                # Product info
+                product_info = df[df['ProductId'] == pred_product_id].iloc[0]
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Product Details:**")
+                    st.write(f"**Name:** {product_info['product_name']}")
+                    st.write(f"**Brand:** {product_info.get('Brand', 'N/A')}")
+                    st.write(f"**Category:** {product_info.get('main_category', 'N/A')}")
+                
+                with col2:
+                    # Product statistics
+                    product_stats = df[df['ProductId'] == pred_product_id].agg({
+                        'Score': ['mean', 'count', 'std']
+                    }).round(2)
+                    
+                    st.markdown("**Product Statistics:**")
+                    st.write(f"**Average Rating:** {product_stats.loc['mean', 'Score']}")
+                    st.write(f"**Total Ratings:** {product_stats.loc['count', 'Score']}")
+                    if not np.isnan(product_stats.loc['std', 'Score']):
+                        st.write(f"**Rating Std Dev:** {product_stats.loc['std', 'Score']}")
+                
+                # User statistics
+                user_stats = df[df['UserId'] == pred_user_id].agg({
+                    'Score': ['mean', 'count', 'std']
+                }).round(2)
+                
+                st.markdown("**User Rating Behavior:**")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("User's Avg Rating", f"{user_stats.loc['mean', 'Score']}")
+                with col2:
+                    st.metric("Total Ratings Given", f"{user_stats.loc['count', 'Score']}")
+                with col3:
+                    if not np.isnan(user_stats.loc['std', 'Score']):
+                        st.metric("Rating Variance", f"{user_stats.loc['std', 'Score']}")
 
 # ---------------------
 # Popularity
