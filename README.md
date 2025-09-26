@@ -1,4 +1,4 @@
-# 📦 Amazon Product Recommendation System
+# 📦 Amazon Recommendation System
 
 This project implements a **Hybrid Recommendation System** that combines **Collaborative Filtering** with **Popularity-Based** and **Category-Aware** filtering to provide personalized Amazon product recommendations based on user ratings and product metadata.
 
